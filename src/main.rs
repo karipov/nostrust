@@ -4,9 +4,12 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::io::stdout;
+use chrono;
 
 mod event;
 use event::Event;
+
+mod client;
 
 fn handle_client(mut stream: TcpStream) {
     println!("Handling client...");
@@ -107,6 +110,7 @@ fn handle_client(mut stream: TcpStream) {
 }
 
 fn main() {
+    println!("{:?}", chrono::offset::Utc::now());
     let port = 8080;
 
     // Start the server in a separate thread

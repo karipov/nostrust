@@ -16,7 +16,8 @@ run with `cargo run --target x86_64-fortanix-unknown-sgx`
 
 15min presentation, demo and discussion
 
-
+CAN KEEP KEYS IN MEMORY
+  
 To deal with:
 - Try to get tinyhttp to work by adding multithreading fortanix
 - Http parsing
@@ -100,3 +101,6 @@ When a relay receives an HTTP(s) request with an Accept header of application/no
   "version": <string version identifier>
 }
 Any field may be omitted, and clients MUST ignore any additional fields they do not understand.
+
+
+NOTE: handling users and their keys is not a concern for this project. We can assume that the client has a keypair and knows how to use it. The relay should not be concerned with the identity of the client, only the validity of the messages they send.
