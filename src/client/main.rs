@@ -1,11 +1,13 @@
 use anyhow::Result;
 
 use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
+use crate::keys::generate_keypair;
 use dialoguer::{console::Style, Input};
 
 // mod message;
 // use core::message::ClientMessage;
 mod terminal;
+mod keys;
 
 // THIS IS A SINGLE-RELAY CLIENT
 fn main() -> Result<()> {
