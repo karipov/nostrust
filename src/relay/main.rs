@@ -38,3 +38,10 @@ mod tests {
         assert_eq!(deserialized, original);
     }
 }
+
+
+// Next:
+// Receive and parse
+// Verify message integrity
+// Store / retrieve / delete events on a db
+// Send messages to clients

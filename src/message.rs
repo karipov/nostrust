@@ -4,7 +4,8 @@ use crate::event::Event;
 use crate::filter::Filter;
 use serde::{Deserialize, Serialize};
 
-#[allow(dead_code)]
+// #[allow(dead_code)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ClientMessage {
     Event(Event),
     Req(String, Vec<Filter>),

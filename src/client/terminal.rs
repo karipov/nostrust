@@ -8,8 +8,9 @@ pub enum Command {
     Unfollow,
     Help,
     Quit,
-    Delete,
-    Get
+    Delete, // Nip-09
+    Get,
+    Info // Nip-11
 }
 
 impl fmt::Display for Command {
@@ -21,7 +22,8 @@ impl fmt::Display for Command {
             Command::Help => "help",
             Command::Quit => "quit",
             Command::Delete => "delete",
-            Command::Get => "get"
+            Command::Get => "get", // maybe also allow get to take an argument for user?
+            Command::Info => "info"
         };
 
         write!(f, "{}", command)
@@ -60,6 +62,7 @@ impl FromStr for TerminalInput {
             "get" => Command::Get,
             "help" => Command::Help,
             "quit" => Command::Quit,
+            "info" => Command::Info,
             _ => return Err("invalid command. enter `help` for a list of commands.".to_string()),
         };
 
