@@ -3,7 +3,8 @@ use anyhow::Result;
 use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use dialoguer::{console::Style, Input};
 
-mod message;
+// mod message;
+use core::message::ClientMessage;
 mod terminal;
 
 fn main() -> Result<()> {

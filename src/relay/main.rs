@@ -1,17 +1,15 @@
 use core::event::Event;
 use serde::{Deserialize, Serialize};
+use core::message::RelayMesage;
 
-type SubscriptionId = String;
-type EventId = String;
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum RelayMesage {
-    Event(SubscriptionId, Event),
-    Ok(EventId, bool, String),
-    Eose(SubscriptionId),
-    Closed(SubscriptionId, String),
-    Notice(String),
-}
+// #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+// pub enum RelayMesage {
+//     Event(SubscriptionId, Event),
+//     Ok(EventId, bool, String),
+//     Eose(SubscriptionId),
+//     Closed(SubscriptionId, String),
+//     Notice(String),
+// }
 
 fn main() {
     println!("Hello, world!");
