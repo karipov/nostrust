@@ -4,7 +4,7 @@ use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use dialoguer::{console::Style, Input};
 
 // mod message;
-use core::message::ClientMessage;
+// use core::message::ClientMessage;
 mod terminal;
 
 fn main() -> Result<()> {
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
             // Unfollow => println!("unfollow"),
             Help => println!(
                 "The following commands are available: {}",
-                [Post, Follow, Unfollow, Help, Quit]
+                [Post, Follow, Unfollow, Help, Quit, Delete, Get]
                     .iter()
                     .map(|item| item.to_string())
                     .collect::<Vec<String>>()

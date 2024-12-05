@@ -8,6 +8,8 @@ pub enum Command {
     Unfollow,
     Help,
     Quit,
+    Delete,
+    Get
 }
 
 impl fmt::Display for Command {
@@ -18,6 +20,8 @@ impl fmt::Display for Command {
             Command::Unfollow => "unfollow",
             Command::Help => "help",
             Command::Quit => "quit",
+            Command::Delete => "delete",
+            Command::Get => "get"
         };
 
         write!(f, "{}", command)
@@ -52,6 +56,8 @@ impl FromStr for TerminalInput {
             "post" => Command::Post,
             "follow" => Command::Follow,
             "unfollow" => Command::Unfollow,
+            "delete" => Command::Delete,
+            "get" => Command::Get,
             "help" => Command::Help,
             "quit" => Command::Quit,
             _ => return Err("invalid command. enter `help` for a list of commands.".to_string()),
@@ -59,7 +65,7 @@ impl FromStr for TerminalInput {
 
         let argument = parts.next().map(|s| s.to_string());
 
-        if (command != Command::Help && command != Command::Quit) && argument.is_none() {
+        if (command != Command::Help && command != Command::Quit && command != Command::Delete && command != Command::Get) && argument.is_none() {
             return Err(
                 "no argument was provided. enter `help` for a list of commands.".to_string(),
             );
