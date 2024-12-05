@@ -14,6 +14,8 @@ httparse = "1.9.5"
 chrono = "0.4.38"
 secp256k1 = "0.30.0"
 rand = "0.8.5"
+anyhow = "1.0.94"
+dialoguer = "0.11.0"
 
 [lib]
 name = "core"
