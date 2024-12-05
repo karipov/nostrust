@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
-use crate::keys::generate_keypair;
+use crate::keys::{generate_users, Credentials};
 use dialoguer::{console::Style, Input};
 
 // mod message;
@@ -25,6 +25,13 @@ fn main() -> Result<()> {
     "#;
 
     println!("{}", dim.apply_to(motd));
+
+    let users = generate_users();
+
+    // println!("Users:");
+    // for (user_id, credentials) in users.iter() {
+    //     println!("{}: {}, {}", user_id, hex::encode(credentials.public_key.serialize()), hex::encode(credentials.private_key.secret_bytes()));
+    // }
 
     loop {
         let input: TerminalInput = Input::with_theme(&SimplerTheme::default())
