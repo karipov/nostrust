@@ -1,4 +1,4 @@
-use crate::event::Event;
+use core::event::Event;
 use serde::{Deserialize, Serialize};
 
 type SubscriptionId = String;
@@ -11,6 +11,10 @@ pub enum RelayMesage {
     Eose(SubscriptionId),
     Closed(SubscriptionId, String),
     Notice(String),
+}
+
+fn main() {
+    println!("Hello, world!");
 }
 
 // test suite

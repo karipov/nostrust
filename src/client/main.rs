@@ -1,6 +1,5 @@
-// Sending events over HTTP
-use crate::event::Event;
-use crate::filter::Filter;
+use core::event::Event;
+use core::filter::Filter;
 
 pub enum ClientMessage {
     Event(Event),
@@ -8,7 +7,7 @@ pub enum ClientMessage {
     Close(String),
 }
 
-fn something_here() {
+fn main() {
     // setup private key
     // connect to the relay
     // send events

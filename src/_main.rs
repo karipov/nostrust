@@ -12,9 +12,6 @@ use event::Event;
 mod filter;
 use filter::Filter;
 
-mod client;
-mod relay;
-
 fn handle_client(mut stream: TcpStream) {
     println!("Handling client...");
     stdout().flush().unwrap(); // Ensure log is flushed
