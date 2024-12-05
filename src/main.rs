@@ -1,10 +1,10 @@
+use chrono;
 use httparse::{Request, EMPTY_HEADER};
 use serde_json::{json, Value};
+use std::io::stdout;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::thread;
-use std::io::stdout;
-use chrono;
 
 mod event;
 use event::Event;
@@ -173,7 +173,6 @@ fn main() {
     }
 }
 
-
 // // use httparse::Request;
 // // use std::io::{Read, Write};
 // // use std::net::TcpListener;
@@ -185,7 +184,6 @@ fn main() {
 // use std::io::{Read, Write};
 // use std::net::{TcpListener, TcpStream};
 // use std::thread;
-
 
 // /// Function to create and send a JSON response over TCP
 // fn send_json(port: u16) {
@@ -240,7 +238,7 @@ fn main() {
 //         print!("Parsing body...");
 //             if let Ok(httparse::Status::Complete(body_start)) = result {
 //                 let body = &buffer[body_start..];
-            
+
 //                 // Extract body based on Content-Length
 //                 let body_text = if let Some(len) = content_length {
 //                     &body[..len]
@@ -257,7 +255,7 @@ fn main() {
 //                 match serde_json::from_str::<Value>(body_text) {
 //                     Ok(parsed_json) => {
 //                         println!("Parsed JSON: {}", parsed_json);
-    
+
 //                         // Deserialize into Event struct
 //                         match serde_json::from_value::<Event>(parsed_json) {
 //                             Ok(event) => {
@@ -334,7 +332,7 @@ fn main() {
 //         json_string.len(),
 //         json_string
 //     );
-    
+
 //     if let Ok(mut stream) = TcpStream::connect(("127.0.0.1", port)) {
 //         stream.write_all(request.as_bytes()).unwrap();
 //         println!("Sent JSON to server:\n{}", request);
@@ -362,7 +360,7 @@ fn main() {
 //         let result = request.parse(&buffer);
 //         if result.is_ok() {
 //             println!("Headers: {:?}", request.headers);
-            
+
 //             // Extract the start of the body using the parsed headers
 //             let body_start = result.unwrap().unwrap();
 //             let body = &buffer[body_start..];
@@ -391,41 +389,38 @@ fn main() {
 //     }
 // }
 
-
-
 // use std::{
-    //     io::{prelude::*, BufReader},
-    //     net::{TcpListener, TcpStream},
-    // };
-    
-    // fn main() {
-        //     let listener = TcpListener::bind("127.0.0.1:1604").unwrap();
-        
-        //     for stream in listener.incoming() {
-            //         let stream = stream.unwrap();
-            
-            //         handle_connection(stream);
-            //     }
-            // }
-            
-            // fn handle_connection(mut stream: TcpStream) {
-                //     let buf_reader = BufReader::new(&mut stream);
-                //     let http_request: Vec<_> = buf_reader
-                //         .lines()
-                //         .map(|result| result.unwrap())
-                //         .take_while(|line| !line.is_empty())
-                //         .collect();
-                
-                //     let status_line = "HTTP/1.1 200 OK";
-                //     let message = "Hello World!";
-                //     let length = message.len();
-                
-                //     let response =
-                //         format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{message}");
-                
-                //     stream.write_all(response.as_bytes()).unwrap();
-                // }
+//     io::{prelude::*, BufReader},
+//     net::{TcpListener, TcpStream},
+// };
 
+// fn main() {
+//     let listener = TcpListener::bind("127.0.0.1:1604").unwrap();
+
+//     for stream in listener.incoming() {
+//         let stream = stream.unwrap();
+
+//         handle_connection(stream);
+//     }
+// }
+
+// fn handle_connection(mut stream: TcpStream) {
+//     let buf_reader = BufReader::new(&mut stream);
+//     let http_request: Vec<_> = buf_reader
+//         .lines()
+//         .map(|result| result.unwrap())
+//         .take_while(|line| !line.is_empty())
+//         .collect();
+
+//     let status_line = "HTTP/1.1 200 OK";
+//     let message = "Hello World!";
+//     let length = message.len();
+
+//     let response =
+//         format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{message}");
+
+//     stream.write_all(response.as_bytes()).unwrap();
+// }
 
 // use http::{Request, Response, StatusCode};
 // use std::io::Write;
