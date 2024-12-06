@@ -4,8 +4,8 @@ use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use crate::keys::generate_users;
 use dialoguer::{console::Style, Input};
 use core::event::Event;
-use core::message::{self, ClientMessage};
-use core::filter::{self, Filter};
+use core::message::{ClientMessage, send_http_message};
+use core::filter::Filter;
 
 // mod message;
 mod terminal;
@@ -30,6 +30,7 @@ fn main() -> Result<()> {
 
     let users = generate_users();
     let user_id = "@komron"; // TODO: get user_id from user input
+    let port = 8080;
 
     // println!("Users:");
     // for (user_id, credentials) in users.iter() {
@@ -46,22 +47,20 @@ fn main() -> Result<()> {
         match input.command {
             Post => 
             {
-                // println!("{:?}", input.argument.unwrap());
                 let content = input.argument.unwrap();
                 let credentials = users.get(user_id).unwrap();
-                // println!("User: {}, Public Key: {}, Private Key: {}, Content: {}", user_id, hex::encode(credentials.public_key.serialize()), hex::encode(credentials.private_key.secret_bytes()), content);
 
                 let event = Event::new(
                     hex::encode(credentials.private_key.secret_bytes()),
                     hex::encode(credentials.public_key.serialize()),
-                    1, // What about 0?
+                    1, // TODO: What about 0?
                     vec![],
                     content
                 );
 
-                // println!("{:?}", event);
-
                 let message = ClientMessage::Event(event);
+
+                send_http_message(port, message);
 
                 // TODO: send message to relay, await and print relay response
             },
@@ -71,9 +70,9 @@ fn main() -> Result<()> {
                 let filter = Filter::one_author(hex::encode(author_pubkey.serialize()));
                 let subscription_id = "sub_id".to_string(); // FIXME: generate subscription_id
 
-                println!("{:?}", filter);
-
                 let message = ClientMessage::Req(subscription_id, vec![filter]);
+
+                send_http_message(port, message);
 
             }, // Steps here: create filter using Filter.one_author, send request to relay, await and print relay response
             Unfollow => {
@@ -82,9 +81,12 @@ fn main() -> Result<()> {
             Delete => println!("delete"), // Steps here: send delete event (kind 5) to relay, await and verify success
             Get => {
                 let filter = Filter::default();
-                let subscription_id = "sub_id".to_string(); // FIXME: generate subscription_id or something
+                let subscription_id = "sub_id".to_string(); // FIXME: what is subscription_id here lol
 
                 let message = ClientMessage::Req(subscription_id, vec![filter]);
+
+                send_http_message(port, message);
+
             }, // Steps here: send request to relay, await events and print them
             Info => println!("info"), // Steps here: print info about the relay
             Help => println!(

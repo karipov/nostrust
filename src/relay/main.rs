@@ -1,6 +1,6 @@
 use core::event::Event;
 use serde::{Deserialize, Serialize};
-use core::message::RelayMesage;
+use core::message::RelayMessage;
 
 // #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // pub enum RelayMesage {
@@ -31,9 +31,9 @@ mod tests {
             content: "content".to_string(),
             sig: "sig".to_string(),
         };
-        let original = RelayMesage::Event("sub_id".to_string(), event.clone());
+        let original = RelayMessage::Event("sub_id".to_string(), event.clone());
         let serialized = serde_json::to_string(&original).unwrap();
-        let deserialized: RelayMesage = serde_json::from_str(&serialized).unwrap();
+        let deserialized: RelayMessage = serde_json::from_str(&serialized).unwrap();
 
         assert_eq!(deserialized, original);
     }
