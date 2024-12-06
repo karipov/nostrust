@@ -24,7 +24,7 @@ impl Event {
         let mut event = Self {
             id: "".to_string(), // will be computed later
             pubkey,
-            created_at: 0, // FIXME: use chrono::Utc::now().timestamp() as u64,
+            created_at: chrono::Utc::now().timestamp() as usize,
             kind,
             tags,
             content,

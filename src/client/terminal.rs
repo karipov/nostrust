@@ -66,7 +66,7 @@ impl FromStr for TerminalInput {
             _ => return Err("invalid command. enter `help` for a list of commands.".to_string()),
         };
 
-        let argument = parts.next().map(|s| s.to_string());
+        let argument = parts.next().map(|s| s.trim().to_string());
 
         if (command != Command::Help && command != Command::Quit && command != Command::Delete && command != Command::Get) && argument.is_none() {
             return Err(
