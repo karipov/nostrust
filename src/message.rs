@@ -3,8 +3,8 @@
 use crate::event::Event;
 use crate::filter::Filter;
 use serde::{Deserialize, Serialize};
-use std::net::TcpStream;
 use std::io::Write;
+use std::net::TcpStream;
 
 // #[allow(dead_code)]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -26,7 +26,7 @@ pub enum RelayMessage {
     Notice(String),
 }
 
-pub fn send_http_message<T: Serialize>(port: u16, message: T) {
+pub fn send_http_message<T: Serialize>(ip: &str, port: u16, message: T) {
     let message_str = serde_json::to_string(&message).unwrap();
     let request = format!(
         "POST / HTTP/1.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{}",
@@ -34,10 +34,11 @@ pub fn send_http_message<T: Serialize>(port: u16, message: T) {
         message_str
     );
     println!("Request: {}", request);
-    if let Ok(mut stream) = TcpStream::connect(("127.0.0.1", port)) {
+    if let Ok(mut stream) = TcpStream::connect((ip, port)) {
         stream.write_all(request.as_bytes()).unwrap();
         println!("Sent message: {}", message_str);
-    } // FIXME: check if this works
+    }
+    // FIXME: check if this works
     else {
         println!("Failed to connect to the server");
     }
@@ -50,9 +51,8 @@ mod tests {
 
     #[test]
     fn test_send_http_message() {
-        let port = 8080;
         let message = ClientMessage::Req("test".to_string(), vec![Filter::default()]);
-        send_http_message(port, message);
+        send_http_message("localhost", 8080, message);
         assert_eq!(1, 1);
     }
 }

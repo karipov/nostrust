@@ -13,9 +13,6 @@ pub struct Filter {
 }
 
 impl Filter {
-    pub fn default() -> Self {
-        Default::default()
-    }
     pub fn one_author(author: String) -> Self {
         Self {
             authors: Some(vec![author]),

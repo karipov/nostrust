@@ -1,7 +1,8 @@
 # nostrust
 
 - run the relay with `cargo run --bin relay --target x86_64-fortanix-unknown-sgx`
-- run the client with `cargo run --bin client`
+
+- run the client with `cargo run --bin client --features client`
 
 
 ## Steps
