@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use secp256k1::{Secp256k1, SecretKey, PublicKey};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use secp256k1::{PublicKey, Secp256k1, SecretKey};
 
 #[derive(Debug, Clone)]
 pub struct Credentials {
@@ -22,7 +22,6 @@ pub fn generate_keypair() -> Credentials {
         private_key: sk,
         public_key: pk,
     }
-
 }
 
 pub fn generate_users() -> HashMap<String, Credentials> {
@@ -70,7 +69,7 @@ mod tests {
 
         assert!(event.verify());
     }
-    
+
     #[test]
     fn test_priv_key_generation_fail_verify() {
         use core::event::Event;

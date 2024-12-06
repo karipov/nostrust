@@ -1,15 +1,15 @@
 use anyhow::Result;
 
-use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use crate::keys::generate_users;
-use dialoguer::{console::Style, Input};
+use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use core::event::Event;
-use core::message::{ClientMessage, send_http_message};
 use core::filter::Filter;
+use core::message::{send_http_message, ClientMessage};
+use dialoguer::{console::Style, Input};
 
 // mod message;
-mod terminal;
 mod keys;
+mod terminal;
 
 // THIS IS A SINGLE-RELAY CLIENT
 fn main() -> Result<()> {
@@ -29,13 +29,23 @@ fn main() -> Result<()> {
     println!("{}", dim.apply_to(motd));
 
     let users = generate_users();
-    let user_id = "@komron"; // TODO: get user_id from user input
-    let port = 8080;
+    let (ip, port) = ("localhost", 8080);
 
-    // println!("Users:");
-    // for (user_id, credentials) in users.iter() {
-    //     println!("{}: {}, {}", user_id, hex::encode(credentials.public_key.serialize()), hex::encode(credentials.private_key.secret_bytes()));
-    // }
+    let chosen_user: String = Input::with_theme(&SimplerTheme::default())
+        .with_prompt("> log in: ")
+        .validate_with(|input: &String| {
+            if users.contains_key(input) {
+                Ok(())
+            } else {
+                Err("user not found, try again.")
+            }
+        })
+        .interact()
+        .unwrap();
+
+    let credentials = users.get(&chosen_user).unwrap();
+    let privkey = hex::encode(credentials.private_key.secret_bytes());
+    let pubkey = hex::encode(credentials.public_key.serialize());
 
     loop {
         let input: TerminalInput = Input::with_theme(&SimplerTheme::default())
@@ -45,25 +55,23 @@ fn main() -> Result<()> {
 
         // TODO: create registration flow for private and public keys
         match input.command {
-            Post => 
-            {
+            Post => {
                 let content = input.argument.unwrap();
-                let credentials = users.get(user_id).unwrap();
 
                 let event = Event::new(
-                    hex::encode(credentials.private_key.secret_bytes()),
-                    hex::encode(credentials.public_key.serialize()),
+                    privkey.clone(),
+                    pubkey.clone(),
                     1, // TODO: What about 0?
                     vec![],
-                    content
+                    content,
                 );
 
                 let message = ClientMessage::Event(event);
 
-                send_http_message(port, message);
+                send_http_message(ip, port, message);
 
                 // TODO: send message to relay, await and print relay response
-            },
+            }
             Follow => {
                 let author = input.argument.unwrap();
                 let author_pubkey = users.get(&author).unwrap().public_key;
@@ -72,12 +80,11 @@ fn main() -> Result<()> {
 
                 let message = ClientMessage::Req(subscription_id, vec![filter]);
 
-                send_http_message(port, message);
-
-            }, // Steps here: create filter using Filter.one_author, send request to relay, await and print relay response
+                send_http_message(ip, port, message);
+            } // Steps here: create filter using Filter.one_author, send request to relay, await and print relay response
             Unfollow => {
                 // Can only do this if we have a subscription_id
-            }, // Steps here: send close request to relay, await and print relay response
+            } // Steps here: send close request to relay, await and print relay response
             Delete => println!("delete"), // Steps here: send delete event (kind 5) to relay, await and verify success
             Get => {
                 let filter = Filter::default();
@@ -85,10 +92,9 @@ fn main() -> Result<()> {
 
                 let message = ClientMessage::Req(subscription_id, vec![filter]);
 
-                send_http_message(port, message);
-
-            }, // Steps here: send request to relay, await events and print them
-            Info => println!("info"), // Steps here: print info about the relay
+                send_http_message(ip, port, message);
+            } // Steps here: send request to relay, await events and print them
+            Info => println!("info"),     // Steps here: print info about the relay
             Help => println!(
                 "The following commands are available: {}",
                 [Post, Follow, Unfollow, Help, Quit, Delete, Get, Info]

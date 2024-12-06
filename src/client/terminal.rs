@@ -10,7 +10,7 @@ pub enum Command {
     Quit,
     Delete, // Nip-09
     Get,
-    Info // Nip-11
+    Info, // Nip-11
 }
 
 impl fmt::Display for Command {
@@ -23,7 +23,7 @@ impl fmt::Display for Command {
             Command::Quit => "quit",
             Command::Delete => "delete",
             Command::Get => "get", // maybe also allow get to take an argument for user?
-            Command::Info => "info"
+            Command::Info => "info",
         };
 
         write!(f, "{}", command)
@@ -68,7 +68,13 @@ impl FromStr for TerminalInput {
 
         let argument = parts.next().map(|s| s.trim().to_string());
 
-        if (command != Command::Help && command != Command::Quit && command != Command::Delete && command != Command::Get) && argument.is_none() {
+        if (command != Command::Help
+            && command != Command::Quit
+            && command != Command::Delete
+            && command != Command::Get
+            && command != Command::Info)
+            && argument.is_none()
+        {
             return Err(
                 "no argument was provided. enter `help` for a list of commands.".to_string(),
             );
@@ -127,23 +133,32 @@ impl Theme for SimplerTheme {
         prompt: &str,
         sel: &str,
     ) -> fmt::Result {
-        let parsed = TerminalInput::from_str(sel).map_err(|_| fmt::Error)?;
+        let parsed = TerminalInput::from_str(sel).map_err(|_| fmt::Error);
         let bold = Style::new().for_stderr().bold().dim();
 
-        if let Some(argument) = parsed.argument {
-            write!(
-                f,
-                "{}{} {}",
-                self.prompt_color.apply_to(prompt),
-                bold.apply_to(parsed.command.to_string()),
-                self.confirm_color.apply_to(argument)
-            )
+        if let Ok(parsed) = parsed {
+            if let Some(argument) = parsed.argument {
+                write!(
+                    f,
+                    "{}{} {}",
+                    self.prompt_color.apply_to(prompt),
+                    bold.apply_to(parsed.command.to_string()),
+                    self.confirm_color.apply_to(argument)
+                )
+            } else {
+                write!(
+                    f,
+                    "{}{}",
+                    self.prompt_color.apply_to(prompt),
+                    bold.apply_to(parsed.command.to_string())
+                )
+            }
         } else {
             write!(
                 f,
                 "{}{}",
                 self.prompt_color.apply_to(prompt),
-                bold.apply_to(parsed.command.to_string())
+                self.confirm_color.apply_to(sel)
             )
         }
     }
