@@ -110,7 +110,17 @@ fn main() -> Result<()> {
                 }
 
             } // Steps here: send close request to relay, await and print relay response
-            Delete => println!("delete"), // Steps here: send delete event (kind 5) to relay, await and verify success
+            Delete => {
+                let event = Event::new(
+                    privkey.clone(),
+                    pubkey.clone(),
+                    5,
+                    vec![],
+                    "deletion request".to_string(),
+                );
+                let message = ClientMessage::Event(event);
+                send_http_message(ip, port, message);
+            }, // Steps here: send delete event (kind 5) to relay, await and verify success
             Get => {
                 let filter = Filter::default();
                 let subscription_id = "sub_id".to_string(); // FIXME: what is subscription_id here lol

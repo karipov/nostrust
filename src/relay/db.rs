@@ -5,7 +5,8 @@ use std::collections::HashMap;
 #[derive(Default, Serialize, Deserialize)]
 pub struct DataHolder {
     pub events: HashMap<String, Vec<Event>>, // maps user -> list of their posts
-    pub subscribers: HashMap<String, Vec<String>>, // maps user -> list of their subscriptions
+    pub subscribers: HashMap<String, Vec<String>>, // maps user -> list of their subscription_ids
+    // pub subscriptions: HashMap<String, Vec<String>>, // maps subscription_id -> user being subscribed to
 }
 
 impl DataHolder {
