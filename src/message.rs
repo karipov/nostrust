@@ -55,4 +55,22 @@ mod tests {
         send_http_message("localhost", 8080, message);
         assert_eq!(1, 1);
     }
+
+    #[test]
+    fn test_relay_message_serde() {
+        let event = Event {
+            id: "id".to_string(),
+            pubkey: "pubkey".to_string(),
+            created_at: 0,
+            kind: 0,
+            tags: vec![],
+            content: "content".to_string(),
+            sig: "sig".to_string(),
+        };
+        let original = RelayMessage::Event("sub_id".to_string(), event.clone());
+        let serialized = serde_json::to_string(&original).unwrap();
+        let deserialized: RelayMessage = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(deserialized, original);
+    }
 }

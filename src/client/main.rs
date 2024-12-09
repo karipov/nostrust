@@ -11,7 +11,6 @@ use dialoguer::{console::Style, Input};
 mod keys;
 mod terminal;
 
-// THIS IS A SINGLE-RELAY CLIENT
 fn main() -> Result<()> {
     let dim = Style::new().for_stderr().dim();
     let motd = r#"

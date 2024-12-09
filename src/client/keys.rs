@@ -1,8 +1,13 @@
 use std::collections::HashMap;
 
-use rand::rngs::OsRng;
+use rand::rngs::StdRng;
 use rand::RngCore;
+use rand::SeedableRng;
+use rand::distributions::Alphanumeric;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
+
+const SEED: u64 = 42;
+const USER_IDS: [&str; 5] = ["@komron", "@prithvi", "@kinan", "@alice", "@bob"];
 
 #[derive(Debug, Clone)]
 pub struct Credentials {
@@ -12,7 +17,7 @@ pub struct Credentials {
 
 pub fn generate_keypair() -> Credentials {
     let secp = Secp256k1::new();
-    let mut rng = OsRng;
+    let mut rng = StdRng::seed_from_u64(SEED);
     let mut keybytes = [0u8; 32];
     rng.fill_bytes(&mut keybytes);
     let sk = SecretKey::from_slice(&keybytes).unwrap();
@@ -26,8 +31,7 @@ pub fn generate_keypair() -> Credentials {
 
 pub fn generate_users() -> HashMap<String, Credentials> {
     let mut users = HashMap::new();
-    let user_ids = vec!["@komron", "@prithvi", "@kinan", "@alice", "@bob"];
-    for user_id in user_ids {
+    for user_id in USER_IDS.iter() {
         let kp = generate_keypair();
         users.insert(user_id.to_string(), kp);
     }
@@ -99,4 +103,5 @@ mod tests {
         print!("{:?}", users);
         assert_eq!(users.len(), 5);
     }
+
 }
