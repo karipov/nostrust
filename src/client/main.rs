@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::keys::generate_users;
+use crate::keys::{generate_users, generate_subscription_id};
 use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use core::event::Event;
 use core::filter::Filter;
@@ -45,6 +45,7 @@ fn main() -> Result<()> {
     let credentials = users.get(&chosen_user).unwrap();
     let privkey = hex::encode(credentials.private_key.secret_bytes());
     let pubkey = hex::encode(credentials.public_key.serialize());
+    let mut to_sub_id = std::collections::HashMap::<String, String>::new();
 
     loop {
         let input: TerminalInput = Input::with_theme(&SimplerTheme::default())
@@ -73,16 +74,41 @@ fn main() -> Result<()> {
             }
             Follow => {
                 let author = input.argument.unwrap();
-                let author_pubkey = users.get(&author).unwrap().public_key;
-                let filter = Filter::one_author(hex::encode(author_pubkey.serialize()));
-                let subscription_id = "sub_id".to_string(); // FIXME: generate subscription_id
+                let author_pubkey = match users.get(&author) {
+                    Some(user) => user.public_key,
+                    None => {
+                        println!("Author not found, try again."); // FIXME: this should be an error message
+                        continue;
+                    }
+                };
+                let pubkey_str = hex::encode(author_pubkey.serialize());
+                let filter = Filter::one_author(pubkey_str.clone());
+                let subscription_id = generate_subscription_id();
+
+                to_sub_id.insert(pubkey_str.clone(), subscription_id.clone());
 
                 let message = ClientMessage::Req(subscription_id, vec![filter]);
 
                 send_http_message(ip, port, message);
             } // Steps here: create filter using Filter.one_author, send request to relay, await and print relay response
             Unfollow => {
-                // Can only do this if we have a subscription_id
+                let author = input.argument.unwrap();
+                let author_pubkey = match users.get(&author) {
+                    Some(user) => user.public_key,
+                    None => {
+                        println!("Author not found, try again."); // FIXME: this should be an error message
+                        continue;
+                    }
+                };
+                let pubkey_str = hex::encode(author_pubkey.serialize());
+                if let Some(subscription_id) = to_sub_id.get(&pubkey_str) {
+                    let message = ClientMessage::Close(subscription_id.clone());
+                    to_sub_id.remove(&pubkey_str);
+                    send_http_message(ip, port, message);
+                } else {
+                    println!("You are not subscribed to this user!"); // FIXME: this should be an error message
+                }
+
             } // Steps here: send close request to relay, await and print relay response
             Delete => println!("delete"), // Steps here: send delete event (kind 5) to relay, await and verify success
             Get => {

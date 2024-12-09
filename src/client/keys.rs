@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use rand::rngs::StdRng;
-use rand::RngCore;
-use rand::SeedableRng;
-use rand::distributions::Alphanumeric;
+use rand::{RngCore, SeedableRng, distributions::Alphanumeric, Rng};
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 
 const SEED: u64 = 42;
@@ -17,7 +15,7 @@ pub struct Credentials {
 
 pub fn generate_keypair() -> Credentials {
     let secp = Secp256k1::new();
-    let mut rng = StdRng::seed_from_u64(SEED);
+    let mut rng = rand::thread_rng();
     let mut keybytes = [0u8; 32];
     rng.fill_bytes(&mut keybytes);
     let sk = SecretKey::from_slice(&keybytes).unwrap();
@@ -33,9 +31,19 @@ pub fn generate_users() -> HashMap<String, Credentials> {
     let mut users = HashMap::new();
     for user_id in USER_IDS.iter() {
         let kp = generate_keypair();
-        users.insert(user_id.to_string(), kp);
+        users.insert(user_id.to_string(), kp.clone());
     }
     users
+}
+
+pub fn generate_subscription_id() -> String {
+    let subscription_id: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(64)
+        .map(char::from)
+        .collect();
+
+    subscription_id
 }
 
 // test
@@ -104,4 +112,10 @@ mod tests {
         assert_eq!(users.len(), 5);
     }
 
+    #[test]
+    fn test_generate_subscription_id() {
+        let id = generate_subscription_id();
+        println!("Subscription ID: {}", id);
+        assert!(id.len() <= 64);
+    }
 }
