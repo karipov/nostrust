@@ -11,7 +11,9 @@ use std::net::TcpStream;
 pub enum ClientMessage {
     Event(Event),
     Req(String, Vec<Filter>),
-    Close(String),
+    Close(String, Vec<Filter>),
+    Get(String), // pubkey, "all" or "subs"
+    Info
 }
 
 type SubscriptionId = String;
@@ -38,7 +40,6 @@ pub fn send_http_message<T: Serialize>(ip: &str, port: u16, message: T) {
         stream.write_all(request.as_bytes()).unwrap();
         println!("Sent message: {}", message_str);
     }
-    // FIXME: check if this works
     else {
         println!("Failed to connect to the server");
     }

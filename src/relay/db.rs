@@ -5,36 +5,43 @@ use std::collections::HashMap;
 #[derive(Default, Serialize, Deserialize)]
 pub struct DataHolder {
     pub events: HashMap<String, Vec<Event>>, // maps user -> list of their posts
-    pub subscribers: HashMap<String, Vec<String>>, // maps user -> list of their subscription_ids
-    // pub subscriptions: HashMap<String, Vec<String>>, // maps subscription_id -> user being subscribed to
+    pub subscribers: HashMap<String, Vec<String>>, // maps user -> list of their subscribers
+    pub subscriptions: HashMap<String, Vec<String>>, // maps user -> list of their subscriptions
 }
 
-impl DataHolder {
+impl DataHolder { // FIXME: Add some error handling
     fn add_event(&mut self, event: Event) {
         let user = event.pubkey.clone();
 
         self.events.entry(user.clone()).or_default().push(event);
 
-        // optional: Notify subscribers immediately
-        if let Some(subscribers) = self.subscribers.get(&user) {
-            for subscriber in subscribers {
-                println!("Notify {} about new post from {}", subscriber, user);
-            }
-        }
+        println!("Events: {:#?}", self.events);
+
     }
 
-    fn add_subscription(&mut self, user: String, subscriber: String) {
+    fn add_subscription(&mut self, subscriber: String, author: String) {
+        self.subscriptions
+            .entry(subscriber.clone())
+            .or_default()
+            .push(author.clone());
         self.subscribers
-            .entry(user.clone())
+            .entry(author.clone())
             .or_default()
             .push(subscriber.clone());
 
-        // optional: send all existing posts to the new subscriber
-        if let Some(events) = self.events.get(&user) {
-            for event in events {
-                println!("Send post from {} to new subscriber {}", user, subscriber);
-            }
+        println!("Subscriptions: {:#?}", self.subscriptions);
+        println!("Subscribers: {:#?}", self.subscribers);
+    }
+
+    fn delete_subscription(&mut self, user: String, subscriber: String) {
+        if let Some(subscriptions) = self.subscriptions.get_mut(&user) {
+            subscriptions.retain(|s| s != &subscriber);
         }
+        if let Some(subscribers) = self.subscribers.get_mut(&subscriber) {
+            subscribers.retain(|s| s != &user);
+        }
+
+        println!("Subscriptions: {:#?}", self.subscriptions);
     }
 
     // GDPR deletion
@@ -42,28 +49,63 @@ impl DataHolder {
         self.events.remove(&user);
     }
 
-    pub fn handle_message(&mut self, message: ClientMessage) {
+    // fn get_events(&self, user: String) -> Option<&Vec<Event>> {
+    //     // self.events.get(&user)
+    // }
+
+    pub fn handle_message(&mut self, message: ClientMessage) -> Option<Vec<Event>> {
         match message {
             // event can be a post, deletion
             ClientMessage::Event(event) => {
                 if !event.verify() {
                     println!("Event failed verification");
-                    return;
+                    return None;
                 }
 
                 match event.kind {
-                    0 => print!("metadata"),
+                    0 => print!("metadata"), // FIXME: deal w this
                     5 => {
                         // full deletion for the requesting user
                         self.delete_events(event.pubkey.clone());
                     }
                     _ => self.add_event(event),
                 }
+                return None;
             }
-            _ => println!("Unsupported message type"),
-            // ClientMessage::Req(user: , _) => {
-            //     self.add_subscription(user, subscriber);
-            // }
+            ClientMessage::Req(user, filters) => {
+                let filter = filters.get(0).unwrap().clone();
+                let author = filter.authors.unwrap().get(0).unwrap().clone();
+                let subscriber = user.clone();
+                
+                self.add_subscription(subscriber, author);
+                return None;
+            }
+            ClientMessage::Close(user, filters) => {
+                let filter = filters.get(0).unwrap().clone();
+                let author = filter.authors.unwrap().get(0).unwrap().clone();
+                let unsubscriber = user.clone();
+
+                self.delete_subscription(unsubscriber, author);
+                return None;
+            }
+            ClientMessage::Get(user) => {
+                let subscriptions = self.subscriptions.get(&user).unwrap();
+                let mut retreived_events: Vec<Event> = vec![];
+                for subscription in subscriptions {
+                    if let Some(events) = self.events.get(subscription) {
+                        retreived_events.extend(events.clone());
+                    }
+                }
+                println!("All events: {:#?}", retreived_events);
+
+                // send all events to the user
+                return Some(retreived_events);
+
+            },
+            ClientMessage::Info => {
+                println!("Unsupported message type");
+                return None;
+            },
         }
     }
 }

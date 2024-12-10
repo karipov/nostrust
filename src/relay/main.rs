@@ -18,10 +18,17 @@ fn post_echo(req: &mut Request, db: &mut DataHolder) -> Response<Cursor<Vec<u8>>
     println!("Received: {:#?}", message);
 
     // handle the message
-    db.handle_message(message);
+    let response = db.handle_message(message);
+    match response {
+        Some(events) => {
+            let response_body = serde_json::to_vec(&events).unwrap();
+            Response::from_data(response_body).with_status_code(200)
+        }
+        None => Response::from_string("OK").with_status_code(200),
+    }
 
     // send success back
-    Response::from_string("OK").with_status_code(200)
+    // Response::from_string("OK").with_status_code(200);
 }
 
 fn main() {

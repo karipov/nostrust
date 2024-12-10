@@ -45,7 +45,8 @@ fn main() -> Result<()> {
     let credentials = users.get(&chosen_user).unwrap();
     let privkey = hex::encode(credentials.private_key.secret_bytes());
     let pubkey = hex::encode(credentials.public_key.serialize());
-    let mut to_sub_id = std::collections::HashMap::<String, String>::new();
+    // let mut to_sub_id = std::collections::HashMap::<String, String>::new();
+    // let mut sub_ids = std::collections::HashSet::<String>::new();
 
     loop {
         let input: TerminalInput = Input::with_theme(&SimplerTheme::default())
@@ -81,13 +82,15 @@ fn main() -> Result<()> {
                         continue;
                     }
                 };
-                let pubkey_str = hex::encode(author_pubkey.serialize());
-                let filter = Filter::one_author(pubkey_str.clone());
-                let subscription_id = generate_subscription_id();
+                let author_pubkey_str = hex::encode(author_pubkey.serialize());
+                let user_pubkey_str = hex::encode(credentials.public_key.serialize());
+                let filter = Filter::one_author(author_pubkey_str.clone());
+                // let subscription_id = generate_subscription_id();
 
-                to_sub_id.insert(pubkey_str.clone(), subscription_id.clone());
+                // to_sub_id.insert(pubkey_str.clone(), subscription_id.clone());
+                // sub_ids.insert(subscription_id.clone());
 
-                let message = ClientMessage::Req(subscription_id, vec![filter]);
+                let message = ClientMessage::Req(user_pubkey_str, vec![filter]);
 
                 send_http_message(ip, port, message);
             } // Steps here: create filter using Filter.one_author, send request to relay, await and print relay response
@@ -100,15 +103,13 @@ fn main() -> Result<()> {
                         continue;
                     }
                 };
-                let pubkey_str = hex::encode(author_pubkey.serialize());
-                if let Some(subscription_id) = to_sub_id.get(&pubkey_str) {
-                    let message = ClientMessage::Close(subscription_id.clone());
-                    to_sub_id.remove(&pubkey_str);
-                    send_http_message(ip, port, message);
-                } else {
-                    println!("You are not subscribed to this user!"); // FIXME: this should be an error message
-                }
+                let author_pubkey_str = hex::encode(author_pubkey.serialize());
+                let user_pubkey_str = hex::encode(credentials.public_key.serialize());
+                let filter = Filter::one_author(author_pubkey_str.clone());
 
+                let message = ClientMessage::Close(user_pubkey_str, vec![filter]);
+
+                send_http_message(ip, port, message);
             } // Steps here: send close request to relay, await and print relay response
             Delete => {
                 let event = Event::new(
@@ -122,14 +123,10 @@ fn main() -> Result<()> {
                 send_http_message(ip, port, message);
             }, // Steps here: send delete event (kind 5) to relay, await and verify success
             Get => {
-                let filter = Filter::default();
-                let subscription_id = "sub_id".to_string(); // FIXME: what is subscription_id here lol
-
-                let message = ClientMessage::Req(subscription_id, vec![filter]);
-
-                send_http_message(ip, port, message);
+                let user_pubkey_str = hex::encode(credentials.public_key.serialize());
+                send_http_message(ip, port, ClientMessage::Get(user_pubkey_str.clone()));
             } // Steps here: send request to relay, await events and print them
-            Info => println!("info"),     // Steps here: print info about the relay
+            Info => send_http_message(ip, port, ClientMessage::Info),     // Steps here: print info about the relay
             Help => println!(
                 "The following commands are available: {}",
                 [Post, Follow, Unfollow, Help, Quit, Delete, Get, Info]
