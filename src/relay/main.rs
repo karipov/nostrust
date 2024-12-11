@@ -3,9 +3,10 @@ use db::DataHolder;
 use std::io::Cursor;
 use tiny_http::{Request, Response, Server};
 
-use sgx_isa::{Report, Targetinfo};
+// use sgx_isa::{Report, Targetinfo};
 
 mod db;
+mod sealing;
 
 fn post_echo(req: &mut Request, db: &mut DataHolder) -> Response<Cursor<Vec<u8>>> {
     let mut request_body_bytes = Vec::new();
@@ -30,10 +31,22 @@ fn post_echo(req: &mut Request, db: &mut DataHolder) -> Response<Cursor<Vec<u8>>
 
 fn main() {
     let (ip, port) = ("0.0.0.0", 8080);
-    let mut db = DataHolder::default();
 
-    let targetinfo = Targetinfo::from(Report::for_self());
-    println!("Attestation Measurement: {:?}", targetinfo.measurement);
+    let load = true;
+
+    let mut db = if load {
+        let db = DataHolder::default();
+        db.to_filerunner();
+
+        let db = DataHolder::from_filerunner();
+        println!("Loaded db: {:#?}", db);
+        db
+    } else {
+        DataHolder::default()
+    };
+
+    // let targetinfo = Targetinfo::from(Report::for_self());
+    // println!("Attestation Measurement: {:?}", targetinfo.measurement);
 
     let server = Server::http(format!("{}:{}", ip, port)).unwrap();
     for mut request in server.incoming_requests() {
@@ -41,9 +54,3 @@ fn main() {
         request.respond(resp).unwrap();
     }
 }
-
-// Next:
-// Receive and parse
-// Verify message integrity
-// Store / retrieve / delete events on a db
-// Send messages to clients
