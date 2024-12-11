@@ -1,15 +1,35 @@
 use anyhow::Result;
+use keys::get_user_by_pubkey;
 
-use crate::keys::{generate_users, generate_subscription_id};
+use crate::keys::generate_users;
 use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
+use chrono::{Local, TimeZone};
 use core::event::Event;
 use core::filter::Filter;
-use core::message::{send_http_message, ClientMessage};
+use core::message::ClientMessage;
 use dialoguer::{console::Style, Input};
+use serde::Serialize;
 
 // mod message;
 mod keys;
 mod terminal;
+
+pub fn send_http_message(ip: &str, port: u16, message: impl Serialize) -> Option<Vec<u8>> {
+    let output = reqwest::blocking::Client::new()
+        .post(format!("http://{}:{}/", ip, port))
+        .body(serde_json::to_string(&message).unwrap())
+        .send();
+
+    if let Ok(output) = output {
+        if let Ok(output) = output.bytes() {
+            Some(output.to_vec())
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
 
 fn main() -> Result<()> {
     let dim = Style::new().for_stderr().dim();
@@ -121,12 +141,33 @@ fn main() -> Result<()> {
                 );
                 let message = ClientMessage::Event(event);
                 send_http_message(ip, port, message);
-            }, // Steps here: send delete event (kind 5) to relay, await and verify success
+            } // Steps here: send delete event (kind 5) to relay, await and verify success
             Get => {
                 let user_pubkey_str = hex::encode(credentials.public_key.serialize());
-                send_http_message(ip, port, ClientMessage::Get(user_pubkey_str.clone()));
+                let output_data =
+                    send_http_message(ip, port, ClientMessage::Get(user_pubkey_str.clone()));
+
+                if let Some(data) = output_data {
+                    let events: Result<Vec<Event>, _> = serde_json::from_slice(&data);
+
+                    #[allow(deprecated)]
+                    if let Ok(events) = events {
+                        for event in events {
+                            println!(
+                                "{} posted {:#?} at {}",
+                                get_user_by_pubkey(event.pubkey.as_ref(), &users).unwrap(),
+                                event.content,
+                                Local
+                                    .timestamp(event.created_at as i64, 0)
+                                    .format("%d/%m/%y at %l:%M%P")
+                            );
+                        }
+                    }
+                }
             } // Steps here: send request to relay, await events and print them
-            Info => send_http_message(ip, port, ClientMessage::Info),     // Steps here: print info about the relay
+            Info => {
+                send_http_message(ip, port, ClientMessage::Info);
+            } // Steps here: print info about the relay
             Help => println!(
                 "The following commands are available: {}",
                 [Post, Follow, Unfollow, Help, Quit, Delete, Get, Info]

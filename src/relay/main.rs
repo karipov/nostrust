@@ -1,6 +1,6 @@
 use core::message::ClientMessage;
 use db::DataHolder;
-use std::{collections::HashMap, io::Cursor};
+use std::io::Cursor;
 use tiny_http::{Request, Response, Server};
 
 use sgx_isa::{Report, Targetinfo};
@@ -26,19 +26,14 @@ fn post_echo(req: &mut Request, db: &mut DataHolder) -> Response<Cursor<Vec<u8>>
         }
         None => Response::from_string("OK").with_status_code(200),
     }
-
-    // send success back
-    // Response::from_string("OK").with_status_code(200);
 }
 
 fn main() {
     let (ip, port) = ("0.0.0.0", 8080);
     let mut db = DataHolder::default();
 
-    use sgx_isa::{Report, Targetinfo};
-
-    let targetinfo = Report::for_self();
-    println!("Targetinfo: {:#?}", targetinfo);
+    let targetinfo = Targetinfo::from(Report::for_self());
+    println!("Attestation Measurement: {:?}", targetinfo.measurement);
 
     let server = Server::http(format!("{}:{}", ip, port)).unwrap();
     for mut request in server.incoming_requests() {

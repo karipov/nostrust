@@ -9,14 +9,12 @@ pub struct DataHolder {
     pub subscriptions: HashMap<String, Vec<String>>, // maps user -> list of their subscriptions
 }
 
-impl DataHolder { // FIXME: Add some error handling
+impl DataHolder {
+    // FIXME: Add some error handling
     fn add_event(&mut self, event: Event) {
         let user = event.pubkey.clone();
 
         self.events.entry(user.clone()).or_default().push(event);
-
-        println!("Events: {:#?}", self.events);
-
     }
 
     fn add_subscription(&mut self, subscriber: String, author: String) {
@@ -29,8 +27,8 @@ impl DataHolder { // FIXME: Add some error handling
             .or_default()
             .push(subscriber.clone());
 
-        println!("Subscriptions: {:#?}", self.subscriptions);
-        println!("Subscribers: {:#?}", self.subscribers);
+        // println!("Subscriptions: {:#?}", self.subscriptions);
+        // println!("Subscribers: {:#?}", self.subscribers);
     }
 
     fn delete_subscription(&mut self, user: String, subscriber: String) {
@@ -41,7 +39,7 @@ impl DataHolder { // FIXME: Add some error handling
             subscribers.retain(|s| s != &user);
         }
 
-        println!("Subscriptions: {:#?}", self.subscriptions);
+        // println!("Subscriptions: {:#?}", self.subscriptions);
     }
 
     // GDPR deletion
@@ -70,23 +68,23 @@ impl DataHolder { // FIXME: Add some error handling
                     }
                     _ => self.add_event(event),
                 }
-                return None;
+                None
             }
             ClientMessage::Req(user, filters) => {
-                let filter = filters.get(0).unwrap().clone();
-                let author = filter.authors.unwrap().get(0).unwrap().clone();
+                let filter = filters.first().unwrap().clone();
+                let author = filter.authors.unwrap().first().unwrap().clone();
                 let subscriber = user.clone();
-                
+
                 self.add_subscription(subscriber, author);
-                return None;
+                None
             }
             ClientMessage::Close(user, filters) => {
-                let filter = filters.get(0).unwrap().clone();
-                let author = filter.authors.unwrap().get(0).unwrap().clone();
+                let filter = filters.first().unwrap().clone();
+                let author = filter.authors.unwrap().first().unwrap().clone();
                 let unsubscriber = user.clone();
 
                 self.delete_subscription(unsubscriber, author);
-                return None;
+                None
             }
             ClientMessage::Get(user) => {
                 let subscriptions = self.subscriptions.get(&user).unwrap();
@@ -96,16 +94,15 @@ impl DataHolder { // FIXME: Add some error handling
                         retreived_events.extend(events.clone());
                     }
                 }
-                println!("All events: {:#?}", retreived_events);
+                // println!("All events: {:#?}", retreived_events);
 
                 // send all events to the user
-                return Some(retreived_events);
-
-            },
+                Some(retreived_events)
+            }
             ClientMessage::Info => {
                 println!("Unsupported message type");
-                return None;
-            },
+                None
+            }
         }
     }
 }

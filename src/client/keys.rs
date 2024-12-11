@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use rand::rngs::StdRng;
-use rand::{RngCore, SeedableRng, distributions::Alphanumeric, Rng};
+use rand::{RngCore, SeedableRng};
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 
 const SEEDS: [u64; 5] = [12345, 67890, 13579, 24680, 11223];
@@ -36,14 +36,13 @@ pub fn generate_users() -> HashMap<String, Credentials> {
     users
 }
 
-pub fn generate_subscription_id() -> String {
-    let subscription_id: String = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(64)
-        .map(char::from)
-        .collect();
-
-    subscription_id
+pub fn get_user_by_pubkey(pubkey: &str, users: &HashMap<String, Credentials>) -> Option<String> {
+    for (user_id, credentials) in users.iter() {
+        if hex::encode(credentials.public_key.serialize()) == pubkey {
+            return Some(user_id.clone());
+        }
+    }
+    None
 }
 
 // test
@@ -110,12 +109,5 @@ mod tests {
         let users = generate_users();
         print!("{:?}", users);
         assert_eq!(users.len(), 5);
-    }
-
-    #[test]
-    fn test_generate_subscription_id() {
-        let id = generate_subscription_id();
-        println!("Subscription ID: {}", id);
-        assert!(id.len() <= 64);
     }
 }
