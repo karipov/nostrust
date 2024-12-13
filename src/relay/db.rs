@@ -5,12 +5,17 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 
+use crate::sealing::{self, SealData};
+
 const FILERUNNER_SERVER: &str = "0.0.0.0:5555";
 
-fn get_db() -> std::io::Result<String> {
+fn get_file(endpoint: &str) -> std::io::Result<String> {
     let mut stream = TcpStream::connect(FILERUNNER_SERVER)?;
 
-    let request = "GET /get-db HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    let request = format!(
+        "GET {} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n",
+        endpoint
+    );
     stream.write_all(request.as_bytes())?;
     stream.flush()?;
 
@@ -23,16 +28,17 @@ fn get_db() -> std::io::Result<String> {
     Ok(response)
 }
 
-fn set_db(body: &str) -> std::io::Result<()> {
+fn set_file(endpoint: &str, body: &str) -> std::io::Result<()> {
     let mut stream = TcpStream::connect(FILERUNNER_SERVER)?;
 
     let request = format!(
-        "POST /set-db HTTP/1.1\r\n\
+        "POST {} HTTP/1.1\r\n\
          Host: localhost\r\n\
          Content-Type: text/plain\r\n\
          Content-Length: {}\r\n\
          \r\n\
          {}",
+        endpoint,
         body.len(),
         body
     );
@@ -53,15 +59,28 @@ pub struct DataHolder {
 impl DataHolder {
     // Retrieve the db from the filerunner and deserialize it
     pub fn from_filerunner() -> Self {
-        let db = get_db().unwrap();
-        println!("Retrieved db: {:#?}", db);
-        serde_json::from_str(&db).unwrap()
+        let raw_db = get_file("/get-db").unwrap();
+        let raw_seal_data = get_file("/get-sealdata").unwrap();
+        let seal_data: SealData = serde_json::from_str(&raw_seal_data).unwrap();
+        let seal_key = sealing::unseal_key(seal_data).unwrap();
+
+        let decrypted_db = sealing::decrypt_string(&seal_key, raw_db).unwrap();
+
+        println!("Retrieved db: {:#?}", decrypted_db);
+        println!("Retrieved seal data: {:#?}", raw_seal_data);
+        serde_json::from_str(&decrypted_db).unwrap()
     }
 
     // Serialize the db and send it to the filerunner
     pub fn to_filerunner(&self) {
-        let db = serde_json::to_string(&self).unwrap();
-        set_db(&db).unwrap();
+        let raw_db = serde_json::to_string(&self).unwrap();
+        let (seal_key, seal_data) = sealing::seal_key();
+
+        let db = sealing::encrypt_string(&seal_key, raw_db).unwrap();
+        let seal_data = serde_json::to_string(&seal_data).unwrap();
+
+        set_file("/set-sealdata", &seal_data).unwrap();
+        set_file("/set-db", &db).unwrap();
     }
 
     fn add_event(&mut self, event: Event) {

@@ -10,8 +10,8 @@ pub enum ClientMessage {
     Event(Event),
     Req(String, Vec<Filter>),
     Close(String, Vec<Filter>),
-    Get(String), // pubkey, "all" or "subs"
     Info,
+    Get(String),
 }
 
 type SubscriptionId = String;

@@ -170,7 +170,7 @@ fn main() -> Result<()> {
             } // Steps here: print info about the relay
             Help => println!(
                 "The following commands are available: {}",
-                [Post, Follow, Unfollow, Help, Quit, Delete, Get, Info]
+                [Post, Follow, Unfollow, Get, Delete, Info, Help, Quit]
                     .iter()
                     .map(|item| item.to_string())
                     .collect::<Vec<String>>()

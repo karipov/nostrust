@@ -21,6 +21,8 @@ sgx-isa = { version = "0.4", features = ["sgxstd"] }
 reqwest = { version = "0.12.9", features = ["blocking"], optional = true}
 axum = { version = "0.7.9", features = ["macros"], optional = true}
 tokio = { version = "1.42.0", features = ["full"], optional = true}
+aes-gcm = "0.10.3"
+base64 = "0.22.1"
 
 [features]
 untrusted = ["dialoguer", "reqwest", "axum", "tokio"]
