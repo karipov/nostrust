@@ -2,6 +2,7 @@
 // use core::filter::Filter;
 use crate::event::Event;
 use crate::filter::Filter;
+use crate::info::Info;
 use serde::{Deserialize, Serialize};
 
 // #[allow(dead_code)]
@@ -19,11 +20,8 @@ type EventId = String;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum RelayMessage {
-    Event(SubscriptionId, Event),
-    Ok(EventId, bool, String),
-    Eose(SubscriptionId),
-    Closed(SubscriptionId, String),
-    Notice(String),
+    Events(Vec<Event>),
+    Info(Info),
 }
 
 // testing to see what the request looks like
@@ -42,7 +40,7 @@ mod tests {
             content: "content".to_string(),
             sig: "sig".to_string(),
         };
-        let original = RelayMessage::Event("sub_id".to_string(), event.clone());
+        let original = RelayMessage::Events(vec![event.clone()]);
         let serialized = serde_json::to_string(&original).unwrap();
         let deserialized: RelayMessage = serde_json::from_str(&serialized).unwrap();
 

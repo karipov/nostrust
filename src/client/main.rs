@@ -6,9 +6,11 @@ use crate::terminal::{Command::*, SimplerTheme, TerminalInput};
 use chrono::{Local, TimeZone};
 use core::event::Event;
 use core::filter::Filter;
+use core::info::Info;
 use core::message::ClientMessage;
 use dialoguer::{console::Style, Input};
 use serde::Serialize;
+use sha2::Digest;
 
 // mod message;
 mod keys;
@@ -165,8 +167,24 @@ fn main() -> Result<()> {
                     }
                 }
             } // Steps here: send request to relay, await events and print them
+            #[allow(deprecated)]
             Info => {
-                send_http_message(ip, port, ClientMessage::Info);
+                let output_info =
+                    send_http_message(ip, port, ClientMessage::Info);
+                    let info: Result<Info, _> = serde_json::from_slice(&output_info.unwrap());
+                    // hash and base-64 encode the info.attestation:
+                    if let Ok(info) = info {
+                        let measurement = base64::encode(
+                            sha2::Sha256::digest(info.attestation)
+                        );
+                        println!("Relay Info:");
+                        println!("Name: {}", info.name);
+                        println!("Version: {}", info.version);
+                        println!("Description: {}", info.description);
+                        println!("Attestation: {}", measurement);
+                        println!("Icon: {}", info.icon.unwrap());
+                        println!("Software: {}", info.software);
+                    }
             } // Steps here: print info about the relay
             Help => println!(
                 "The following commands are available: {}",

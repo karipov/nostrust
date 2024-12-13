@@ -1,6 +1,8 @@
-use core::{event::Event, message::ClientMessage};
+use core::{event::Event, message::{ClientMessage, RelayMessage}};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use core::info::Info;
+use sgx_isa::{Report, Targetinfo};
 
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -114,7 +116,7 @@ impl DataHolder {
         self.events.remove(&user);
     }
 
-    pub fn handle_message(&mut self, message: ClientMessage) -> Option<Vec<Event>> {
+    pub fn handle_message(&mut self, message: ClientMessage) -> Option<RelayMessage> {
         match message {
             // event can be a post, deletion
             ClientMessage::Event(event) => {
@@ -162,11 +164,21 @@ impl DataHolder {
                 // println!("All events: {:#?}", retreived_events);
 
                 // send all events to the user
-                Some(retreived_events)
+                Some(RelayMessage::Events(retreived_events))
             }
             ClientMessage::Info => {
-                println!("Unsupported message type");
-                None
+                let targetinfo = Targetinfo::from(Report::for_self());
+                let info = Info {
+                    name: "Nostrust Relay".to_string(),
+                    description: "An attestable GDPR-compliant Nostr relay!".to_string(),
+                    icon: Some("https://drive.google.com/file/d/1AdM2UZaxVKjpm_6D45ktWc8wVg0ivxCV/view?usp=sharing".to_string()),
+                    supported_nips: vec![1, 9, 11],
+                    software: "https://github.com/karipov/nostrust".to_string(),
+                    version: "0.1.0".to_string(),
+                    attestation: targetinfo.measurement,
+                    ..Default::default()
+                };
+                Some(RelayMessage::Info(info))
             }
         }
     }
