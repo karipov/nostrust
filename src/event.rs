@@ -38,6 +38,7 @@ impl Event {
         event
     }
 
+    /// Computes the id of the event using the NIP-01 specification
     fn compute_id(event: &Self) -> String {
         let serialized = serde_json::to_string(event).unwrap();
         let mut hasher = Sha256::new();
@@ -46,6 +47,7 @@ impl Event {
         hex::encode(hasher.finalize())
     }
 
+    /// Signs the event with the private key
     fn sign(event: &Self, private_key: String) -> String {
         let secp = Secp256k1::new();
 
@@ -59,6 +61,7 @@ impl Event {
         hex::encode(signature.serialize_compact())
     }
 
+    /// Verifies the signature of the event; ensures validity of the event on relay-side
     pub fn verify(&self) -> bool {
         let secp = Secp256k1::new();
 

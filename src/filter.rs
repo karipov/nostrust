@@ -13,6 +13,7 @@ pub struct Filter {
 }
 
 impl Filter {
+    /// Filter for subscribing to a specific author
     pub fn one_author(author: String) -> Self {
         Self {
             authors: Some(vec![author]),

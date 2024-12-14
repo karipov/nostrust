@@ -16,6 +16,7 @@ use sha2::Digest;
 mod keys;
 mod terminal;
 
+/// Sends an HTTP message to the relay and returns the response. Used for all client-relay communication.
 pub fn send_http_message(ip: &str, port: u16, message: impl Serialize) -> Option<Vec<u8>> {
     let output = reqwest::blocking::Client::new()
         .post(format!("http://{}:{}/", ip, port))
@@ -67,16 +68,14 @@ fn main() -> Result<()> {
     let credentials = users.get(&chosen_user).unwrap();
     let privkey = hex::encode(credentials.private_key.secret_bytes());
     let pubkey = hex::encode(credentials.public_key.serialize());
-    // let mut to_sub_id = std::collections::HashMap::<String, String>::new();
-    // let mut sub_ids = std::collections::HashSet::<String>::new();
 
     loop {
         let input: TerminalInput = Input::with_theme(&SimplerTheme::default())
             .with_prompt("> ")
             .interact_text()
             .unwrap();
-
-        // TODO: create registration flow for private and public keys
+        
+        // Handling the input
         match input.command {
             Post => {
                 let content = input.argument.unwrap();
@@ -84,7 +83,7 @@ fn main() -> Result<()> {
                 let event = Event::new(
                     privkey.clone(),
                     pubkey.clone(),
-                    1, // TODO: What about 0?
+                    1,
                     vec![],
                     content,
                 );
@@ -93,7 +92,6 @@ fn main() -> Result<()> {
 
                 send_http_message(ip, port, message);
 
-                // TODO: send message to relay, await and print relay response
             }
             Follow => {
                 let author = input.argument.unwrap();
@@ -107,15 +105,10 @@ fn main() -> Result<()> {
                 let author_pubkey_str = hex::encode(author_pubkey.serialize());
                 let user_pubkey_str = hex::encode(credentials.public_key.serialize());
                 let filter = Filter::one_author(author_pubkey_str.clone());
-                // let subscription_id = generate_subscription_id();
-
-                // to_sub_id.insert(pubkey_str.clone(), subscription_id.clone());
-                // sub_ids.insert(subscription_id.clone());
-
                 let message = ClientMessage::Req(user_pubkey_str, vec![filter]);
 
                 send_http_message(ip, port, message);
-            } // Steps here: create filter using Filter.one_author, send request to relay, await and print relay response
+            }
             Unfollow => {
                 let author = input.argument.unwrap();
                 let author_pubkey = match users.get(&author) {
@@ -132,7 +125,7 @@ fn main() -> Result<()> {
                 let message = ClientMessage::Close(user_pubkey_str, vec![filter]);
 
                 send_http_message(ip, port, message);
-            } // Steps here: send close request to relay, await and print relay response
+            }
             Delete => {
                 let event = Event::new(
                     privkey.clone(),
@@ -143,7 +136,7 @@ fn main() -> Result<()> {
                 );
                 let message = ClientMessage::Event(event);
                 send_http_message(ip, port, message);
-            } // Steps here: send delete event (kind 5) to relay, await and verify success
+            }
             Get => {
                 let user_pubkey_str = hex::encode(credentials.public_key.serialize());
                 let output_data =
@@ -166,13 +159,12 @@ fn main() -> Result<()> {
                         }
                     }
                 }
-            } // Steps here: send request to relay, await events and print them
+            }
             #[allow(deprecated)]
             Info => {
                 let output_info =
                     send_http_message(ip, port, ClientMessage::Info);
                     let info: Result<Info, _> = serde_json::from_slice(&output_info.unwrap());
-                    // hash and base-64 encode the info.attestation:
                     if let Ok(info) = info {
                         let measurement = base64::encode(
                             sha2::Sha256::digest(info.attestation)
@@ -185,7 +177,7 @@ fn main() -> Result<()> {
                         println!("Icon: {}", info.icon.unwrap());
                         println!("Software: {}", info.software);
                     }
-            } // Steps here: print info about the relay
+            }
             Help => println!(
                 "The following commands are available: {}",
                 [Post, Follow, Unfollow, Get, Delete, Info, Help, Quit]
@@ -195,14 +187,8 @@ fn main() -> Result<()> {
                     .join(", ")
             ),
             Quit => break,
-            // _ => (),
         }
     }
 
     Ok(())
 }
-
-// Now:
-// Generate keys for client
-// functions to handle each of post, follow, unfollow, delete, get
-// send via HTTP to relay

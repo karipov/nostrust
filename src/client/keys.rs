@@ -13,6 +13,7 @@ pub struct Credentials {
     pub public_key: PublicKey,
 }
 
+/// Generating keypairs for demo users (constant seeds for reproducibility)
 pub fn generate_keypair(i: usize) -> Credentials {
     let secp = Secp256k1::new();
     let mut rng = StdRng::seed_from_u64(SEEDS[i]);
@@ -27,6 +28,7 @@ pub fn generate_keypair(i: usize) -> Credentials {
     }
 }
 
+/// Generating demo users for Nostrust client
 pub fn generate_users() -> HashMap<String, Credentials> {
     let mut users = HashMap::new();
     for (i, user_id) in USER_IDS.iter().enumerate() {
@@ -36,6 +38,7 @@ pub fn generate_users() -> HashMap<String, Credentials> {
     users
 }
 
+/// Get user by public key
 pub fn get_user_by_pubkey(pubkey: &str, users: &HashMap<String, Credentials>) -> Option<String> {
     for (user_id, credentials) in users.iter() {
         if hex::encode(credentials.public_key.serialize()) == pubkey {

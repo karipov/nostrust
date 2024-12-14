@@ -21,7 +21,7 @@ pub enum RelayMessage {
     Info(Info),
 }
 
-// testing to see what the request looks like
+// testing to see what the messages look like
 #[cfg(test)]
 mod tests {
     use super::*;

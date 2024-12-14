@@ -59,7 +59,7 @@ pub struct DataHolder {
 }
 
 impl DataHolder {
-    // Retrieve the db from the filerunner and deserialize it
+    /// Retrieve the db from the filerunner, unseal and deserialize it
     pub fn from_filerunner() -> Self {
         let raw_db = get_file("/get-db").unwrap();
         let raw_seal_data = get_file("/get-sealdata").unwrap();
@@ -73,7 +73,7 @@ impl DataHolder {
         serde_json::from_str(&decrypted_db).unwrap()
     }
 
-    // Serialize the db and send it to the filerunner
+    /// Serialize and seal the db, send it to the filerunner
     pub fn to_filerunner(&self) {
         let raw_db = serde_json::to_string(&self).unwrap();
         let (seal_key, seal_data) = sealing::seal_key();
@@ -85,12 +85,14 @@ impl DataHolder {
         set_file("/set-db", &db).unwrap();
     }
 
+    /// Add an event to the db
     fn add_event(&mut self, event: Event) {
         let user = event.pubkey.clone();
 
         self.events.entry(user.clone()).or_default().push(event);
     }
 
+    /// Add a subscription to the db
     fn add_subscription(&mut self, subscriber: String, author: String) {
         self.subscriptions
             .entry(subscriber.clone())
@@ -102,6 +104,7 @@ impl DataHolder {
             .push(subscriber.clone());
     }
 
+    /// Remove a subscription from the db
     fn delete_subscription(&mut self, user: String, subscriber: String) {
         if let Some(subscriptions) = self.subscriptions.get_mut(&user) {
             subscriptions.retain(|s| s != &subscriber);
@@ -111,7 +114,7 @@ impl DataHolder {
         }
     }
 
-    // GDPR deletion
+    /// GDPR deletion of all events for a user
     fn delete_events(&mut self, user: String) {
         self.events.remove(&user);
     }
@@ -127,7 +130,7 @@ impl DataHolder {
 
                 match event.kind {
                     // NIP-11
-                    0 => print!("metadata"), // FIXME: deal w this
+                    0 => print!("metadata"),
                     // NIP-09
                     5 => {
                         self.delete_events(event.pubkey.clone());
@@ -161,7 +164,6 @@ impl DataHolder {
                         retreived_events.extend(events.clone());
                     }
                 }
-                // println!("All events: {:#?}", retreived_events);
 
                 // send all events to the user
                 Some(RelayMessage::Events(retreived_events))

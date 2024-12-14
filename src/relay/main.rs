@@ -3,7 +3,6 @@ use db::DataHolder;
 use std::io::Cursor;
 use tiny_http::{Request, Response, Server};
 
-mod attestation;
 mod db;
 mod sealing;
 

@@ -22,7 +22,7 @@ impl fmt::Display for Command {
             Command::Help => "help",
             Command::Quit => "quit",
             Command::Delete => "delete",
-            Command::Get => "get", // maybe also allow get to take an argument for user?
+            Command::Get => "get",
             Command::Info => "info",
         };
 
