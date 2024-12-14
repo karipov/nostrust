@@ -15,9 +15,6 @@ pub enum ClientMessage {
     Get(String),
 }
 
-type SubscriptionId = String;
-type EventId = String;
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum RelayMessage {
     Events(Vec<Event>),
