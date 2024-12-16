@@ -1,5 +1,7 @@
 # Nostrust
 
+[[`Report`](/report.pdf)]
+
 Nostrust is a project that aims to provide an attestable GDPR-compliant Nostr relay and supporting Nostr client through the use of Intel SGX enclaves. The relay runs in an SGX enclave, while the untrusted client and filerunner interact with the relay.
 
 ## Setup and Installation
